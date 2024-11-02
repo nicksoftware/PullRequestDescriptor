@@ -1,0 +1,94 @@
+name: Build, Test and Release
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  SOLUTION_NAME: 'PullRequestDescriptionGenerator.Avalonia'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --no-restore --verbosity normal
+
+  create-release:
+    needs: build-and-test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Build macOS
+        run: |
+          dotnet publish ${{ env.SOLUTION_NAME }} -c Release -r osx-x64 --self-contained true /p:PublishSingleFile=true
+          cd ${{ env.SOLUTION_NAME }}/bin/Release/net8.0/osx-x64/publish
+          zip -r ../../../../../PR-Description-Generator-${{ steps.get_version.outputs.VERSION }}-osx-x64.zip ./*
+
+      - name: Build Windows
+        run: |
+          dotnet publish ${{ env.SOLUTION_NAME }} -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
+          cd ${{ env.SOLUTION_NAME }}/bin/Release/net8.0/win-x64/publish
+          zip -r ../../../../../PR-Description-Generator-${{ steps.get_version.outputs.VERSION }}-win-x64.zip ./*
+
+      - name: Build Linux
+        run: |
+          dotnet publish ${{ env.SOLUTION_NAME }} -c Release -r linux-x64 --self-contained true /p:PublishSingleFile=true
+          cd ${{ env.SOLUTION_NAME }}/bin/Release/net8.0/linux-x64/publish
+          zip -r ../../../../../PR-Description-Generator-${{ steps.get_version.outputs.VERSION }}-linux-x64.zip ./*
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ steps.get_version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+          files: |
+            PR-Description-Generator-${{ steps.get_version.outputs.VERSION }}-osx-x64.zip
+            PR-Description-Generator-${{ steps.get_version.outputs.VERSION }}-win-x64.zip
+            PR-Description-Generator-${{ steps.get_version.outputs.VERSION }}-linux-x64.zip
+          body: |
+            ## PR Description Generator ${{ steps.get_version.outputs.VERSION }}
+
+            ### Downloads
+            - [macOS x64](PR-Description-Generator-${{ steps.get_version.outputs.VERSION }}-osx-x64.zip)
+            - [Windows x64](PR-Description-Generator-${{ steps.get_version.outputs.VERSION }}-win-x64.zip)
+            - [Linux x64](PR-Description-Generator-${{ steps.get_version.outputs.VERSION }}-linux-x64.zip)
+
+            ### Installation
+            1. Download the appropriate version for your operating system
+            2. Extract the zip file
+            3. Run the executable
+
+            For detailed installation instructions, please refer to the [documentation](README.md).
