@@ -1,0 +1,83 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:PullRequestDescriptor.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="700"
+        x:Class="PullRequestDescriptor.Views.SettingsWindow"
+        x:DataType="vm:SettingsViewModel"
+        Title="Settings"
+        Width="600" Height="700"
+        WindowStartupLocation="CenterOwner"
+        TransparencyLevelHint="AcrylicBlur"
+        Background="Transparent"
+        ExtendClientAreaToDecorationsHint="True">
+
+    <Panel>
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    TintColor="Black"
+                    TintOpacity="0.8"
+                    MaterialOpacity="0.65" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
+
+        <ScrollViewer Margin="20,40,20,20">
+            <StackPanel Spacing="20">
+                <!-- General Settings -->
+                <Border Background="#252525" CornerRadius="12" Padding="20">
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="General" FontWeight="Bold" FontSize="18"/>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Theme"/>
+                            <ComboBox HorizontalAlignment="Stretch"
+                                    SelectedItem="{Binding Theme}"
+                                    ItemsSource="{Binding AvailableThemes}"/>
+                        </StackPanel>
+
+                        <CheckBox Content="Show in Menu Bar"
+                                 IsChecked="{Binding ShowInMenuBar}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- API Settings -->
+                <Border Background="#252525" CornerRadius="12" Padding="20">
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="API Settings" FontWeight="Bold" FontSize="18"/>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="OpenAI API Key"/>
+                            <TextBox PasswordChar="•"
+                                   Text="{Binding ApiKey}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Prompt Template -->
+                <Border Background="#252525" CornerRadius="12" Padding="20">
+                    <StackPanel Spacing="15">
+                        <TextBlock Text="Prompt Template" FontWeight="Bold" FontSize="18"/>
+
+                        <TextBox Text="{Binding PromptTemplate}"
+                                AcceptsReturn="True"
+                                TextWrapping="Wrap"
+                                Height="300"/>
+
+                        <Button Content="Reset to Default"
+                                Command="{Binding ResetPromptTemplateCommand}"
+                                HorizontalAlignment="Right"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Save Button -->
+                <Button Content="Save Changes"
+                        Command="{Binding SaveChangesCommand}"
+                        HorizontalAlignment="Center"
+                        Background="#0066CC"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Panel>
+</Window>
