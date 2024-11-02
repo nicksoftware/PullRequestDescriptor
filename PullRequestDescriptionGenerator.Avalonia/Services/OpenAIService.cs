@@ -1,25 +1,39 @@
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using System;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace PullRequestDescriptor.Services;
 
-public class OpenAIService
+public class OpenAIService : IDisposable
 {
-    private readonly Kernel _kernel;
+    private Kernel _kernel;
     private readonly SettingsService _settingsService;
-    private const string ModelName = "gpt-4o-mini";
     private const int MaxChunkSize = 8000; // Safe limit for context window
 
     public OpenAIService(string apiKey, SettingsService settingsService)
     {
         _settingsService = settingsService;
+        _kernel = CreateKernel(settingsService.CurrentSettings.OpenAIModel, apiKey);
+
+        // Subscribe to settings changes to update the model
+        _settingsService.SettingsChanged += OnSettingsChanged;
+    }
+
+    private static Kernel CreateKernel(string model, string apiKey)
+    {
         var builder = Kernel.CreateBuilder()
-            .AddOpenAIChatCompletion(ModelName, apiKey);
-        _kernel = builder.Build();
+            .AddOpenAIChatCompletion(model, apiKey);
+        return builder.Build();
+    }
+
+    private void OnSettingsChanged(object? sender, Settings settings)
+    {
+        // Create new kernel with updated settings
+        var newKernel = CreateKernel(settings.OpenAIModel, settings.ApiKey);
+        // Replace the old kernel
+        _kernel = newKernel;
     }
 
     public async Task<string> GeneratePullRequestDescription(string changes)
@@ -31,7 +45,7 @@ public class OpenAIService
 
             // Get the template from settings
             var promptTemplate = _settingsService.CurrentSettings.PromptTemplate;
-            
+
             // If template is empty, use the default template
             if (string.IsNullOrWhiteSpace(promptTemplate))
             {
@@ -145,5 +159,12 @@ public class OpenAIService
         }
 
         return chunks.ToArray();
+    }
+
+    public void Dispose()
+    {
+        _settingsService.SettingsChanged -= OnSettingsChanged;
+
+        GC.SuppressFinalize(this);
     }
 }

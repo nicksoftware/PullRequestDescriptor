@@ -75,7 +75,8 @@ public class SettingsService
         Theme = "System",
         ShowInMenuBar = true,
         ApiKey = string.Empty,
-        PromptTemplate = DefaultPromptTemplate
+        PromptTemplate = DefaultPromptTemplate,
+        OpenAIModel = "gpt-4-turbo-preview"
     };
 
     public static string DefaultPromptTemplate => @"You are a helpful assistant that generates clear and concise pull request descriptions based on code changes.
@@ -116,4 +117,5 @@ public class Settings
     public bool ShowInMenuBar { get; set; } = true;
     public string ApiKey { get; set; } = string.Empty;
     public string PromptTemplate { get; set; } = string.Empty;
+    public string OpenAIModel { get; set; } = "gpt-4-turbo-preview";
 }

@@ -53,6 +53,13 @@
                             <TextBox PasswordChar="•"
                                    Text="{Binding ApiKey}"/>
                         </StackPanel>
+
+                        <StackPanel Grid.Row="2" Spacing="8" Margin="0,15,0,0">
+                            <TextBlock Text="OpenAI Model"/>
+                            <ComboBox HorizontalAlignment="Stretch"
+                                      SelectedItem="{Binding OpenAIModel}"
+                                      ItemsSource="{Binding AvailableModels}"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
